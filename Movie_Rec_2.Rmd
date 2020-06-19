@@ -1,0 +1,232 @@
+---
+title: "Movie Recoomendation"
+author: "Ademola Apata"
+date: "6/3/2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Installing packages
+```{r, echo = FALSE}
+#install.packages("rlang", type = "source",dependencies = TRUE)
+
+library(data.table) 
+#install.packages("recommenderlab")
+
+#install.packages("plyr")
+library(plyr)
+library(recommenderlab)
+#install.packages("ggplot2",repos = c("http://rstudio.org/_packages","http://cran.rstudio.com"))
+library(ggplot2)
+#install.packages("reshape2")
+library(reshape2)
+```
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+
+Data Loading
+
+```{r }
+#movies <- read.csv("C:/Users/demos/OneDrive/Ryerson University Materials/CMKE 136/Data_Analysis_R/Kaggle/IMDb_movies.csv",na.strings = c("","NA"), stringsAsFactors = F, header = T)
+
+IMDB_data <- read.csv("C:/Users/demos/Desktop/Ryerson/Test_IMDB-Dataset/movies.csv", stringsAsFactors = F, header = T)
+
+IMDB_rating <- read.csv("C:/Users/demos/Desktop/Ryerson/Test_IMDB-Dataset/ratings.csv", stringsAsFactors = F, header = T)
+
+#movie_names <- read.csv("C:/Users/demos/OneDrive/Ryerson University Materials/CMKE 136/Data_Analysis_R/Kaggle/IMDb names.csv",na.strings = c("","NA"), stringsAsFactors = F, header = T)
+
+#movie_ratings <- read.csv("C:/Users/demos/OneDrive/Ryerson University Materials/CMKE 136/Data_Analysis_R/Kaggle/IMDb ratings.csv",na.strings = c("","NA"), stringsAsFactors = F, header = T)
+
+#movie_title_principals <- read.csv("C:/Users/demos/OneDrive/Ryerson University Materials/CMKE 136/Data_Analysis_R/Kaggle/IMDb title_principals.csv",na.strings = c("","NA"), stringsAsFactors = F, header = T)
+
+
+```
+
+##Selecting relevant attributes and highlighting checking individual movie genre types
+
+```{r pressure, echo=FALSE}
+#str(movies)
+#head(movie_s)
+
+#movie_s <- movies[c(1:2,4,6,8,9)]
+summary(IMDB_data)
+summary(IMDB_rating)
+
+
+
+
+```
+
+
+
+############################DATA PRE-PROCESSING##########################
+we need to convert the genres present in the movie_data dataframe into a more usable format by the users. In order to do so, we will first create a one-hot encoding to create a matrix that comprises of corresponding genres for each of the films.
+
+```{r}
+
+#Identifying individual movie types in movie dataset
+movie_genre <- as.data.frame(IMDB_data$genres, stringsAsFactors = F)
+movie_genre2 <- as.data.frame(tstrsplit(movie_genre[,1], '[|]',type.convert = TRUE), stringsAsFactors = F) 
+colnames(movie_genre2) <- c(1:10) #renaming column names 1, 2, 3 etc...
+
+
+#Identifying movie types
+for (i in length(movie_genre2)) {
+  test <- as.character(na.omit(movie_genre2[,i]))
+  test <- tolower(test) #Translate characters in character vectors, in particular from upper to lower case or vice versa.
+  keywords_count <- data.frame(table(unlist(test)))
+}
+
+genre_list <- c("Action", "Adventure", "Animation", "Children", 
+                "Comedy", "Crime","Documentary", "Drama", "Fantasy",
+                "Film-Noir", "Horror", "Musical", "Mystery","Romance",
+                "Sci-Fi", "Thriller", "War", "Western")
+
+#Matrix for encoding
+genre_matrix <- matrix(nrow = 10330,ncol = 18)
+genre_matrix[1,] <- genre_list
+colnames(genre_matrix) <- genre_list
+
+for(col in 1:nrow(movie_genre2)){
+  for(index in 1:ncol(movie_genre2)){
+    
+    col_result = which(genre_matrix[1,] == movie_genre2[index,col]) 
+    genre_matrix[index+1, col_result] <- 1
+    
+  }
+}
+#eliminate first row which was on the genre list
+genre_matrix2 <- as.data.frame(genre_matrix[-1,], stringsAsFactors = F) 
+for(col in 1:ncol(genre_matrix2)){
+  #convert characters to integers
+  genre_matrix2[,col] <- as.integer(genre_matrix2[,col]) 
+}
+#head(genre_matrix2)
+#str(genre_matrix2)
+```
+
+###‘search matrix’ that will allow us to perform an easy search of the films by specifying the genre present in our list
+```{r}
+investigate_matrix <- cbind(IMDB_data[,1:2], genre_matrix2[])
+
+head(investigate_matrix)
+```
+
+```{r}
+movie_ratingMatrix <- dcast(IMDB_rating, userId~movieId, value.var = "rating", na.rm=FALSE)
+movie_ratingMatrix <- as.matrix(movie_ratingMatrix[,-1]) #remove 1st column "user Id"
+#Convert movie_ratingMatrix into a recommenderlab sparse matrix
+movie_ratingMatrix <- as(movie_ratingMatrix, "realRatingMatrix")
+movie_ratingMatrix
+
+head(movie_ratingMatrix)
+```
+Recommendation Model tools in R and Applying Item based collaborative filtering
+```{r}
+recommendation_tools <- recommenderRegistry$get_entries(dataType= "realRatingMatrix")
+
+names(recommendation_tools)
+
+#lapply(recommendation_tools,"[[","description") #Explaining the various model types
+
+#Applying Item based collaborative filtering
+recommendation_tools$IBCF_realRatingMatrix$parameters
+
+#Finding similarities between movies inthe dataset
+```
+ 
+====creating a relationship of similarity between the two users. With the help of recommenderlab, we can compute similarities using various operators like cosine, pearson====
+```{r}
+user_similarity <- similarity(movie_ratingMatrix[1:4,],method = "cosine", which = "users")
+as.matrix(user_similarity)
+
+image(as.matrix(similarity_matrix), main = "Similarities betwween users")
+
+
+```
+
+
+===========Displaying similarities shared between films
+
+```{r}
+movie_similarity <- similarity(movie_ratingMatrix[,1:4], method ="cosine", which = "items")
+as.matrix(movie_similarity)
+image(as.matrix(similarity_matrix), main = "Similarities betwween movies")
+```
+
+===Extracting the most unique rating
+```{r}
+ratingValues <-  as.vector(movie_ratingMatrix@data)
+unique(ratingValues)
+
+
+Movie_rating_table <- table(ratingValues)
+Movie_rating_table
+
+```
+
+===========================Movies Visualization=========================================
+Purpose of this section is to organize the number of views for movies and rank them in descending order
+```{r}
+Countviews_for_movies <- colCounts(movie_ratingMatrix) #Number of movies
+
+#visual dataframe of movies 
+tabular_view_movies <- data.frame(movie = names(Countviews_for_movies), views_count = Countviews_for_movies)#dataframe for view
+
+# sorting table of movies viewed
+tabular_view_movies <- tabular_view_movies[order(tabular_view_movies$views_count, decreasing = T),]
+head(tabular_view_movies)
+
+#Visual Title of Movies
+tabular_view_movies$title <- NA
+for (i in 1:10325) {
+  tabular_view_movies[i,3] <- as.character(subset(IMDB_data, IMDB_data$movieId == tabular_view_movies[i,1])$title)
+}
+head(tabular_view_movies)
+```
+Heatmap of Movie Ratings
+
+```{r}
+image(movie_ratingMatrix[1:20, 1:25], axes = FALSE, main = "Heatmap of the first 25 rows and 25 columns")
+```
+
+
+```{r}
+
+ggplot(tabular_view_movies[1:6, ], aes(x = title, y = views_count)) +
+  geom_bar(stat="identity", fill = 'steelblue') +
+  geom_text(aes(label=views_count), vjust=-0.3, size=3.5) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Total Views of the Top Films")
+```
+===================================DATA PREPARATION (Movie Ratings)==================================
+#For finding useful data in our dataset, we have set the threshold for the minimum number of users who have rated a film as 50. This is also same for minimum number of views that are per film. This way, we have filtered a list of watched films from least-watched ones.
+```{r}
+movie_ratingTreshold <- movie_ratingMatrix[rowCounts(movie_ratingMatrix) > 50, colCounts(movie_ratingMatrix) > 50]
+movie_ratingTreshold
+```
+From the above output of ‘movie_ratings’, we observe that there are 420 users and 447 films as opposed to the previous 668 users and 10325 films. We can now delineate our matrix of relevant users as follows –
+```{r}
+minrated_movies <- quantile(rowCounts(movie_ratingTreshold),0.98)
+minimum_user_who_rated <- quantile(colCounts(movie_ratingTreshold),0.98)
+image(movie_ratingTreshold[rowCounts(movie_ratingTreshold) > minrated_movies, colCounts(movie_ratingTreshold) > minimum_user_who_rated],main = "Heatmap of the top users and movies")
+```
+
+Now, we will visualize the distribution of the average ratings per user.
+```{r}
+distributed_rating_average <- rowMeans(movie_ratingTreshold)
+hist(distributed_rating_average, main = "Average ratings distributed per user", xlab = "Average rating")
+#main = #, fill=("purple"), col=I("green")) + ggtitle("Average ratings distributed per user")
+```
+Data Normalization - In the case of some users, there can be high ratings or low ratings provided to all of the watched films. This will act as a bias while implementing our model. In order to remove this, we normalize our data.
+```{r}
+normalized_movie_ratingTresholds <- normalize(movie_ratingTreshold)
+sum(rowMeans(normalized_movie_ratingTresholds) > 0.00001)
+image(normalized_movie_ratingTresholds[rowCounts(normalized_movie_ratingTresholds) > minrated_movies,                      colCounts(normalized_movie_ratingTresholds) > minimum_user_who_rated],main = "Normalized Ratings of the Top Users")
+```
