@@ -58,4 +58,4 @@
 **Line  251** – Implementation of the “ predict function ()” to visualize the top 10 recommended movies to a user to specify the number of films to each user.
 **Line  261** – Load  to output top 10 movies in the dataset for the first user.
 
-#  Descriptive Statistics of Movie Recommender Results shows an analyzi of tesults from R document
+# Check "Descriptive Statistics of Movie Recommender Results,pdf" to view analysis of results.
