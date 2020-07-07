@@ -1,4 +1,4 @@
-# CKME-136-Movie-recommender - 
+# CKME-136-Movie-recommender
 
 ## 1 Used Libraries
 **Line 16** - In this Data Science project, the following packages were  used – ‘recommenderlab’, ‘dplyr’,  ‘ggplot2’, ‘data.table’ and ‘reshape2’ was executed.
