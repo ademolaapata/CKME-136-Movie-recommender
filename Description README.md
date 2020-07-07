@@ -1,5 +1,13 @@
 # CKME-136-Movie-recommender: Methodology to execute the Initial code and Result.
 
+## Dataset folder has an input of datasets used in the movie recommender project.
+
+## The Initial Results folder has the 
+###### Initial report and code.Rmd file
+###### Descriptive Statistics of Movie Recommender Initial Results and Code.pdf file
+###### Movie-Recommender_Initial-report-and-code.html file
+
+
 ## 1 Used Libraries
 **Line 16** - In this Data Science project, the following packages were  used – ‘recommenderlab’, ‘dplyr’,  ‘ggplot2’, ‘data.table’ and ‘reshape2’ was executed.
 
