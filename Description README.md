@@ -1,4 +1,4 @@
-# CKME-136-Movie-recommender
+# CKME-136-Movie-recommender: Methodology to execute the Initial code and Result.
 
 ## 1 Used Libraries
 **Line 16** - In this Data Science project, the following packages were  used – ‘recommenderlab’, ‘dplyr’,  ‘ggplot2’, ‘data.table’ and ‘reshape2’ was executed.
@@ -57,3 +57,5 @@
 ###### 9.2	Applying recommender system on the dataset
 **Line  251** – Implementation of the “ predict function ()” to visualize the top 10 recommended movies to a user to specify the number of films to each user.
 **Line  261** – Load  to output top 10 movies in the dataset for the first user.
+
+#  Descriptive Statistics of Movie Recommender Results shows an analyzi of tesults from R document
